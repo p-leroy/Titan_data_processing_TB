@@ -34,26 +34,27 @@ from lidar_platform.qc import overlap_map, overlap as over, overlap_control
 
 #%% THIN LINES
 
-idir = r'\\lidar-server.spm.univ-rennes1.fr\DATA\RENNES1\ThomasBernard\StripAlign\Data'
-pattern = '*-C2_r.laz'
-odir = r'\\lidar-server.spm.univ-rennes1.fr\DATA\RENNES1\ThomasBernard\StripAlign\Data\04-QC\Overlap\C2'
+idir = r'Y:\RENNES1\ThomasBernard\StripAlign\corr_test_XY_disp'
+pattern = '*.laz'
+odir = r'Y:\RENNES1\ThomasBernard\StripAlign\Data\04-QC\Overlap\C2_test_XY'
 over.thin_lines(idir, pattern, odir)
 
 #%% OVERLAP CONTROL C2
 
-workspace = r'\\lidar-server.spm.univ-rennes1.fr\DATA\RENNES1\ThomasBernard\StripAlign\Data\04-QC\Overlap\Overlap'
+workspace = r'Y:\RENNES1\ThomasBernard\StripAlign\Data\04-QC\Overlap'
+lines_dir_a = r'Y:\RENNES1\ThomasBernard\StripAlign\corr_test_XY_disp'
 m3c2_params = "m3c2_params.txt"
 water_surface = "Ardeche_01102021_C2_thin_1m_surface_final.laz"
 
-cc_options = ['standard', 'LAS_auto_save', "ARDECHE"]
-roots_dict = {100: ["L", "-C2_r_1.laz.laz"]}
+cc_options = ['standard', 'LAS_auto_save', "Ardeche"]
+line_nb_digits = 2
+line_template = ["Ardeche_01102021_L",line_nb_digits, "_C2_r_1.laz"]
 max_uncertainty = 0.1
-line_nb_digits = 3
-settings = [cc_options, roots_dict, max_uncertainty, line_nb_digits]
+settings = [cc_options, line_template, max_uncertainty]
 
-folder = "C2"
+folder = "C2_test_XY"
 
-a = overlap_control.Overlap(workspace, m3c2_params, water_surface, settings)
+a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
 a.preprocessing(folder, pattern='*_thin.laz')
 a.processing()
 
