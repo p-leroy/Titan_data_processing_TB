@@ -12,51 +12,51 @@ from lidar_platform.qc import overlap_map, overlap as over, overlap_control
 
 #%% THIN LINES
 
-idir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\Ardeche_01102021\C2_after_corr'
+idir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\Ardeche_18102021\C2'
 pattern = '*.laz'
-odir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\04-QC\Overlap\Ardeche_01102021\C2_after_corr'
+odir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\04-QC\Overlap\Ardeche_18102021\C2'
 over.thin_lines(idir, pattern, odir)
 
 #%% OVERLAP CONTROL C2
 
-workspace = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\04-QC\Overlap\Ardeche_01102021'
-lines_dir_a = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\Ardeche_01102021\C2_after_corr'
+workspace = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\04-QC\Overlap\Ardeche_18102021'
+lines_dir_a = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\Ardeche_18102021\C2'
 m3c2_params = "m3c2_params.txt"
 water_surface = "Ardeche_01102021_C2_thin_1m_surface_final.laz"
 
 cc_options = ['standard', 'LAS_auto_save', "Ardeche"]
 line_nb_digits = 2
-line_template = ["Ardeche_01102021_L",line_nb_digits, "_C2_r_1.laz"]
+line_template = ["Ardeche_18102021_L",line_nb_digits, "_C2_r_1.laz"]
 max_uncertainty = 0.1
 settings = [cc_options, line_template, max_uncertainty]
 
-folder = "C2_after_corr"
+folder = "C2"
 
 a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
-a.preprocessing(folder, pattern='*_thin.laz')
+a.preprocessing(folder, pattern='*_thin.laz', use_water_surface=False)
 a.processing()
 
 #%% THIN LINES C3
 
-idir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\Ardeche_01102021\C3_after_corr'
+idir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\Ardeche_18102021\C3'
 pattern = '*.laz'
-odir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\04-QC\Overlap\Ardeche_01102021\C3_after_corr'
+odir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\04-QC\Overlap\Ardeche_18102021\C3'
 over.thin_lines(idir, pattern, odir)
 
 #%% OVERLAP CONTROL C3
 
-workspace = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\04-QC\Overlap\Ardeche_01102021'
-lines_dir_a = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\Ardeche_01102021\C3_after_corr'
+workspace = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\04-QC\Overlap\Ardeche_18102021'
+lines_dir_a = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\Ardeche_18102021\C3'
 m3c2_params = "m3c2_params.txt"
 water_surface = "Ardeche_01102021_C2_thin_1m_surface_final.laz"
 
 cc_options = ['standard', 'LAS_auto_save', "Ardeche"]
 line_nb_digits = 2
-line_template = ["Ardeche_01102021_L",line_nb_digits, "_C3_r_1.laz"]
+line_template = ["Ardeche_18102021_L",line_nb_digits, "_C3_r_1.laz"]
 max_uncertainty = 0.1
 settings = [cc_options, line_template, max_uncertainty]
 
-folder = "C3_after_corr"
+folder = "C3"
 
 a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
 a.preprocessing(folder, pattern='*_thin.laz', use_water_surface=False)
@@ -64,27 +64,27 @@ a.processing()
 
 #%% THIN LINES C2_C3
 
-idir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\Ardeche_01102021\C2_C3_after_corr'
+idir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\Ardeche_18102021\C2C3'
 pattern = '*.laz'
-odir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\04-QC\Overlap\Ardeche_01102021\C2_C3_after_corr'
+odir = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\04-QC\Overlap\Ardeche_18102021\C2C3'
 over.thin_lines(idir, pattern, odir)
 
 #%% OVERLAP CONTROL C2_C3
 
-workspace = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\04-QC\Overlap\Ardeche_01102021'
-lines_dir_a = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_test\Data\Ardeche_01102021\C2_C3_after_corr'
+workspace = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\04-QC\Overlap\Ardeche_18102021'
+lines_dir_a = r'G:\RENNES1\ThomasBernard\StripAlign\Multi_channel_all_lines\Data\Ardeche_18102021\C2C3'
 lines_dir_b = lines_dir_a
 m3c2_params = "m3c2_params.txt"
 water_surface = "Ardeche_01102021_C2_thin_1m_surface_final.laz"
 
 cc_options = ['standard', 'LAS_auto_save', "Ardeche"]
 line_nb_digits = 2
-line_template = ["Ardeche_01102021_L", line_nb_digits, "_C2_r_1.laz"]
-line_template_b = ["Ardeche_01102021_L", line_nb_digits, "_C3_r_1.laz"]
+line_template = ["Ardeche_18102021_L", line_nb_digits, "_C2_r_1.laz"]
+line_template_b = ["Ardeche_18102021_L", line_nb_digits, "_C3_r_1.laz"]
 max_uncertainty = 0.1
 settings = [cc_options, line_template, max_uncertainty]
 
-folder = "C2_C3_after_corr"
+folder = "C2C3"
 
 a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
 a.preprocessing_c2_c3(folder, lines_dir_b, line_template_b)
