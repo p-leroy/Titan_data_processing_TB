@@ -2,9 +2,11 @@
 # 17/10/2022
 """
 This workflow consists in applying StripAlign (SA) on multiple channels (C2/C3) and multiple epochs.
-It take cares to first classify points in rivers of all specified flight-lines from a water_surface
-point cloud to exclude these points during the registration steps. Two quality check are performed:
-one before and one after the correction.
+It take cares to first classify points in rivers (step 2) of all specified flight-lines from a water_surface
+point cloud to exclude these points during the registration steps.
+It is also possible to classify noisy points for FWF data using lastools (step 1).
+In step 2bis you can classify points below a specified scan_angle absolute value.
+Two quality check are performed: one before and one after the correction.
 What you need:
 - lidar flight lines to register (.laz)
 - SBET trajectory file (.out)
@@ -30,6 +32,7 @@ Project_directory > /Data    > /Epoch_1          > /C2
                                                                            > /C2_after_corr
                                                                            > /C3_after_corr
                                                                            > /C2C3_after_corr
+                                                                           > QC_inter_survey
                     /temp
                     run_SA.bat
                     stripalign.opt.asc
@@ -72,8 +75,8 @@ if FWF is True:
 
 #%% 2. Preprocessing: classify point in rivers from a water_surface point cloud for all specified flight_lines
 workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\Data"
-epoch = ["Ardeche_18102021"] # epoch a and b
-Channels = ['C2','C3']
+epoch = ["Ardeche_01102021","Ardeche_18102021"] # epoch a and b
+Channels = ['C2','C3','C3_fwf']
 max_dist = 20 # Maximum distance to compute a C2C distance (allows to reduce the computation time)
 reference = "Ardeche_01102021_C2_thin_1m_surface_final.laz" # the file name of the water_surface point cloud. This file has to be in the same folder than workspace.
 out_dir = workspace + r"\water\classified"
@@ -115,7 +118,9 @@ subprocess.call(["start",Strip_path+batch_file],shell=True)
 path_res = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results"
 corr_path = os.path.join(path_res,'corr')
 corr_fwf_path = os.path.join(path_res,'corr_fwf')
-for name in epoch:
+epochs = ["Ardeche_01102021","Ardeche_18102021"] # epoch a and b
+Channels = ['C2','C3','C3_fwf']
+for name in epochs:
     for Channel in Channels:
         laz_dir = os.path.join(path_res, os.path.join(name, f'{Channel}_after_corr'))
         p2p_dir = os.path.join(laz_dir,'p2p')
@@ -146,10 +151,6 @@ for name in epoch:
 # Second apply correction to Ardeche_01102021 C3_FWF with C3 as reference
 batch_file = 'run_SA_C3_C3fwf.bat'
 subprocess.call(["start",Strip_path+batch_file],shell=True)
-
-
-
-
 
 
 #%% 4. Quality check (QC) after correction
