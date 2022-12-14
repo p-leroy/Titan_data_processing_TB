@@ -1,5 +1,6 @@
 # Thomas Bernard
 # 17/10/2022
+
 """
 This workflow consists in applying StripAlign (SA) on multiple channels (C2/C3) and multiple epochs.
 It take cares to first classify points in rivers (step 2) of all specified flight-lines from a water_surface
