@@ -2,9 +2,11 @@
 # 17/10/2022
 """
 This workflow consists in applying StripAlign (SA) on multiple channels (C2/C3) and multiple epochs.
-It take cares to first classify points in rivers of all specified flight-lines from a water_surface
-point cloud to exclude these points during the registration steps. Two quality check are performed:
-one before and one after the correction.
+It take cares to first classify points in rivers (step 2) of all specified flight-lines from a water_surface
+point cloud to exclude these points during the registration steps.
+It is also possible to classify noisy points for FWF data using lastools (step 1).
+In step 2bis you can classify points below a specified scan_angle absolute value.
+Two quality check are performed: one before and one after the correction.
 What you need:
 - lidar flight lines to register (.laz)
 - SBET trajectory file (.out)
@@ -30,6 +32,7 @@ Project_directory > /Data    > /Epoch_1          > /C2
                                                                            > /C2_after_corr
                                                                            > /C3_after_corr
                                                                            > /C2C3_after_corr
+                                                                           > QC_inter_survey
                     /temp
                     run_SA.bat
                     stripalign.opt.asc
@@ -51,8 +54,8 @@ from scripts import classify_bathy as cb
 bin_lastools = 'C:/opt/LAStools/bin'
 
 #%% 1. Optional preprocessing (if full-waveform) : classify the noise in a sf with value=7
-FWF = True
-path_fwf = 'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\Data\Ardeche_01102021\C3_fwf'
+FWF = False
+path_fwf = 'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\Data\Herault_30092021\C3_fwf'
 if FWF is True:
     filenames = glob.glob(os.path.join(path_fwf, '*.laz'))
     epsg=2154
@@ -71,8 +74,8 @@ if FWF is True:
             os.rename(infile+'_class.laz', infile + '.laz')
 
 #%% 2. Preprocessing: classify point in rivers from a water_surface point cloud for all specified flight_lines
-workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\Data"
-epoch = ["Ardeche_18102021"] # epoch a and b
+workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\Data"
+epoch = ["Herault_30092021"] # epoch a and b
 Channels = ['C2','C3']
 max_dist = 20 # Maximum distance to compute a C2C distance (allows to reduce the computation time)
 reference = "Ardeche_01102021_C2_thin_1m_surface_final.laz" # the file name of the water_surface point cloud. This file has to be in the same folder than workspace.
@@ -82,9 +85,9 @@ global_shift = global_shifts.Ardeche
 cb.classify_bathy(workspace, epoch, Channels, max_dist, reference, out_dir, global_shift)
 
 #%% 2bis. Preprocessing: classify points with scan angle rank of -12 and 12 as 7 (considered as noise)
-workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\Data"
-epochs = ["Ardeche_01102021","Ardeche_18102021"] # epoch a and b
-Channels = ['C2','C3','C3_fwf']
+workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\Data"
+epochs = ["Herault_30092021"] # epoch a and b
+Channels = ['C2','C3']
 epsg=2154
 for epoch in epochs:
     for channel in Channels:
@@ -106,13 +109,12 @@ for epoch in epochs:
                 os.rename(infile+'_class.laz', infile + '.laz')
 
 #%% 3. Run StripAlign for C2 C3
-# First apply correction to both Ardeche_01102021 and Ardeche_18102021 (C2/C3) all together
-Strip_path = 'G:/RENNES1/ThomasBernard/StripAlign/Ardeche/'
+Strip_path = 'G:/RENNES1/ThomasBernard/StripAlign/Herault/'
 batch_file = 'run_SA.bat'
 subprocess.call(["start",Strip_path+batch_file],shell=True)
 
 #%% Clean and move results files
-path_res = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results"
+path_res = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\results"
 corr_path = os.path.join(path_res,'corr')
 corr_fwf_path = os.path.join(path_res,'corr_fwf')
 for name in epoch:
