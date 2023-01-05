@@ -7,17 +7,17 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 
-from lidar_platform import cc
+from lidar_platform import cc, global_shifts
 from lidar_platform.qc import overlap_map, overlap as over, overlap_control
 
 #%% Same parameters for C2, C3 and C2C3
-results_dir = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results'
-mission = 'Ardeche_01102021'
+results_dir = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\results'
+mission = 'Herault_30092021'
 C2_dir = 'C2_after_corr'
 C3_dir = 'C3_after_corr'
 C2C3_dir = 'C2C3_after_corr'
-cc_option_mission = 'Ardeche'
-water_surface = "Ardeche_01102021_C2_thin_1m_surface_final.laz"
+cc_option_mission = 'Herault'
+water_surface = "C2_ground_thin_1m_surface_final.laz"
 
 #%% THIN LINES
 
@@ -31,6 +31,7 @@ over.thin_lines(idir, pattern, odir)
 workspace= f'{results_dir}\\04-QC\Overlap\{mission}'
 lines_dir_a = f'{results_dir}\{mission}\{C2_dir}'
 m3c2_params = "m3c2_params.txt"
+global_shift = global_shifts.Herault
 
 cc_options = ['standard', 'LAS_auto_save', cc_option_mission]
 line_nb_digits = 2
@@ -42,7 +43,7 @@ folder = C2_dir
 
 a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
 a.preprocessing(folder, pattern='*_thin.laz', use_water_surface=False)
-a.processing()
+a.processing(global_shift)
 
 #%% THIN LINES C3
 idir = f'{results_dir}\{mission}\{C3_dir}'
@@ -55,6 +56,7 @@ over.thin_lines(idir, pattern, odir)
 workspace = f'{results_dir}\\04-QC\Overlap\{mission}'
 lines_dir_a = f'{results_dir}\{mission}\{C3_dir}'
 m3c2_params = "m3c2_params.txt"
+global_shift = global_shifts.Herault
 
 cc_options = ['standard', 'LAS_auto_save', cc_option_mission]
 line_nb_digits = 2
@@ -66,7 +68,7 @@ folder = C3_dir
 
 a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
 a.preprocessing(folder, pattern='*_thin.laz', use_water_surface=False)
-a.processing()
+a.processing(global_shift)
 
 #%% THIN LINES C2_C3
 
