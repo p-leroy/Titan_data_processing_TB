@@ -37,8 +37,49 @@ Project_directory > /Data    > /Epoch_1          > /C2
                     run_SA.bat
                     stripalign.opt.asc
 """
-#%% 1. Quality check (QC) before correction
-# Use the QC_recouvrement.py script
+#%% 1. Manual filtering of noise --> explained in the README file and below
+"""
+1. Traitement manuel pour supprimer des points outliers (au niveau de l'avion) sur C2 et C3.
+Effectué sur:
+C2	C3
+/	L01
+/	L02	
+L03	L03
+/	L04
+/	L05
+/	L06
+/	L07
+/	/
+/	L09
+/	L10
+/	L11
+/	L12
+/	L13
+/	L14
+/	L15
+/	L16
+L18	L18
+/	L19
+L20	L20
+/	L21
+L22	L22
+/	L23
+/	L24
+/	L25
+L26	L26
+/	L27
+/	L28
+/	L29
+/	L30
+/	L31
+/	L32
+/	L33
+/	L34	
+
+2. Filtrage sur la ligne 18 C2 et C3 car problème de GPS time induisant des erreurs résiduelles lors de l'assemblage avec Stripalign.
+ --> Les points avec un GPSTime compris entre 78.2 et 82.5 ont été supprimés pour le C3
+ --> Les points avec un GPSTime compris entre 490.3 et 493.1 ont été supprimés pour le C3
+"""
 
 #%% Import modules
 import subprocess
@@ -46,16 +87,18 @@ import glob
 import os
 import shutil
 
+import numpy as np
+
 from lidar_platform.config import global_shifts
-from lidar_platform import misc
+from lidar_platform import misc, cc, las
 from scripts import classify_bathy as cb
 
 # parameters
 bin_lastools = 'C:/opt/LAStools/bin'
 
-#%% 1. Optional preprocessing (if full-waveform) : classify the noise in a sf with value=7
+#%% 2. Optional preprocessing (only if full-waveform data) : classify the noise in a sf with value=7
 FWF = False
-path_fwf = 'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\Data\Herault_30092021\C3_fwf'
+path_fwf = 'G:\RENNES1\ThomasBernard\StripAlign\Herault\Data\Herault_30092021\C3_fwf'
 if FWF is True:
     filenames = glob.glob(os.path.join(path_fwf, '*.laz'))
     epsg=2154
@@ -73,86 +116,69 @@ if FWF is True:
             os.remove(filename)
             os.rename(infile+'_class.laz', infile + '.laz')
 
-#%% 2. Preprocessing: classify point in rivers from a water_surface point cloud for all specified flight_lines
+#%% 3. Preprocessing: classify point in rivers from a water_surface point cloud for all specified flight_lines
 workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\Data"
 epoch = ["Herault_30092021"] # epoch a and b
 Channels = ['C2','C3']
 max_dist = 20 # Maximum distance to compute a C2C distance (allows to reduce the computation time)
-reference = "Ardeche_01102021_C2_thin_1m_surface_final.laz" # the file name of the water_surface point cloud. This file has to be in the same folder than workspace.
+reference = "C2_ground_thin_1m_surface_final.laz" # the file name of the water_surface point cloud. This file has to be in the same folder than workspace.
 out_dir = workspace + r"\water\classified"
-global_shift = global_shifts.Ardeche
+global_shift = global_shifts.Herault
 
 cb.classify_bathy(workspace, epoch, Channels, max_dist, reference, out_dir, global_shift)
 
-#%% 2bis. Preprocessing: classify points with scan angle rank of -12 and 12 as 7 (considered as noise)
+#%% 4. Preprocessing: classify with the largest absolute scan angle as 7 (considered as noise)
+# Here I chose to find the maximum value of the scan angle first since it is different between flight lines.
+#cc.to_sbf
+
 workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\Data"
 epochs = ["Herault_30092021"] # epoch a and b
-Channels = ['C2','C3']
-epsg=2154
+Channels = ['C2',"C3"]
+global_shift = global_shifts.Herault
 for epoch in epochs:
     for channel in Channels:
         path = os.path.join(workspace,os.path.join(epoch,channel))
         filenames = glob.glob(os.path.join(path, '*.laz'))
         for filename in filenames:
-            cmd = os.path.join(bin_lastools, 'las2las')
-            args = f' -i {filename} -odix _class -olaz'
-            args += (f' -drop_abs_scan_angle_below 12')
-            args += (f' -filtered_transform')
-            args += (f' -set_classification 7')
-            args += f' -epsg {epsg} -meter -elevation_meter'
-            misc.run(cmd + args)
+            laz = las.read(filename)
+            scan_angle = laz['scan_angle_rank']
+            max_value = np.max(np.abs(scan_angle))
+            mask = np.abs(scan_angle)>max_value-1
+            laz['classification'][mask==True] = 7
+            las.WriteLAS(filename, laz)
 
-            #clean
-            infile = os.path.splitext(filename)[0]
-            if os.path.exists(infile + '_class.laz'):
-                os.remove(filename)
-                os.rename(infile+'_class.laz', infile + '.laz')
 
-#%% 3. Run StripAlign for C2 C3
+#%% 5. Run StripAlign for C2 C3
 Strip_path = 'G:/RENNES1/ThomasBernard/StripAlign/Herault/'
 batch_file = 'run_SA.bat'
 subprocess.call(["start",Strip_path+batch_file],shell=True)
 
-#%% Clean and move results files
+#%% 6. Clean and move results files
 path_res = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\results"
 corr_path = os.path.join(path_res,'corr')
-corr_fwf_path = os.path.join(path_res,'corr_fwf')
-for name in epoch:
+epochs = ["Herault_30092021"] # epoch a and b
+Channels = ['C2','C3']
+for name in epochs:
     for Channel in Channels:
         laz_dir = os.path.join(path_res, os.path.join(name, f'{Channel}_after_corr'))
         p2p_dir = os.path.join(laz_dir,'p2p')
         os.makedirs(laz_dir, exist_ok=True)
         os.makedirs(p2p_dir, exist_ok=True)
 
-        if Channel=='C3_fwf':
-            p2p_files = glob.glob(corr_fwf_path + f'{name}_*_C3_*_p2p_corr.laz')
-            res_files = glob.glob(corr_fwf_path + f'{name}_*_C3_r_1.laz')
-        else:
-            p2p_files = glob.glob(corr_path + f'{name}_*_{Channel}_*_p2p_corr.laz')
-            res_files = glob.glob(corr_path + f'{name}_*_{Channel}_r_1.laz')
+        p2p_files = glob.glob(os.path.join(corr_path, f'*{Channel}*_p2p_corr.laz'))
+        res_files = glob.glob(os.path.join(corr_path, f'*{Channel}_r_1.laz'))
 
-        for file in res_files:
-            shutil.move(file, laz_dir)
         for file in p2p_files:
             shutil.move(file, p2p_dir)
 
-    if Channel != 'C3_fwf':
-        C2C3_dir = os.path.join(path_res, os.path.join(name, f'C2C3_after_corr'))
-        os.makedirs(C2C3_dir, exist_ok=True)
-        file_list = glob.glob(os.path.join(laz_dir, '*.laz'))
-        for file in file_list:
-            filename = os.path.basename(file)
-            shutil.copyfile(file, os.path.join(C2C3_dir,filename))
-
-#%% 4. Run StripAlign for C3_fwf
-# Second apply correction to Ardeche_01102021 C3_FWF with C3 as reference
-batch_file = 'run_SA_C3_C3fwf.bat'
-subprocess.call(["start",Strip_path+batch_file],shell=True)
+        for file in res_files:
+            shutil.move(file, laz_dir)
 
 
-
-
+#%% 7. Run StripAlign for C3_fwf
+#batch_file = 'run_SA_C3_C3fwf.bat'
+#subprocess.call(["start",Strip_path+batch_file],shell=True)
 
 
 #%% 4. Quality check (QC) after correction
-# Use the QC_recouvrement.py script and QC_inter_survey.py
+# Use the QC_recouvrement.py script and QC_inter_survey_C2C3.py
