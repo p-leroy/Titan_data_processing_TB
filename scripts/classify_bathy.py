@@ -33,7 +33,7 @@ def classify_bathy(workspace,epoch,Channels,max_dist,reference, out_dir, global_
 
             for iii in range(0,len(lines)):
                 file_path = lines[iii]
-                if Channel=='C3_fwf/TMP_TB' and i==0:
+                if Channel=='C3_fwf' and i==0:
                     output = cc2c.custom_c2c(file_path+'.laz',  workspace + '\\' + reference, max_dist=max_dist, split_XYZ=True,
                                                  remove_C2C_SF=True, octree_level=11, global_shift=global_shift, silent= True)
                     if os.path.exists(output):

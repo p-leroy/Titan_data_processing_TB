@@ -153,4 +153,4 @@ subprocess.call(["start",Strip_path+batch_file],shell=True)
 
 
 #%% 4. Quality check (QC) after correction
-# Use the QC_recouvrement.py script and QC_inter_survey.py
+# Use the QC_recouvrement.py script and QC_inter_survey_C2C3.py
