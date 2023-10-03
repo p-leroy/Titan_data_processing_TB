@@ -46,11 +46,13 @@ import os
 import shutil
 
 from lidar_platform.config import global_shifts
-from lidar_platform import misc
+from lidar_platform import misc,cc
+from lidar_platform.config.config import cc_custom, cc_std, cc_std_alt
 from scripts import classify_bathy as cb
 
 # parameters
 bin_lastools = r'C:\opt\LAStools\bin'
+cc_2023_01_06 = r'G:\RENNES1\PaulLeroy\CloudCompare_2023_01_06\CloudCompare.exe'
 
 ####### Preprocessing ##############
 #%% 1. Optional preprocessing (if full-waveform) : classify the noise in a sf with value=7
@@ -169,17 +171,29 @@ for name in epochs:
 # Use the QC_recouvrement.py script and QC_inter_survey_C2C3.py
 
 #%%####### Bathymetry ##############
-# 6a. Correction refraction C3
+#%% Build water surface from corrected data
+# 1. Preprocessing : Thin C2 and C2 with the lowest points
+#  Use the C2_thin_water_surface_preprocessing.py and C3_thin_water_surface_preprocessing.py script
+# 2. Construct water surface seed and propate the water surface
+# Use the Ardeche_01102021_water_surface.py script
+# 3. Automatic filtering of water surface with gradient z > 0.1 removed (with cloudcompare)
+# do 1., 2., 3. for Ardeche_18102021 (in 2. use the Ardeche_18102021_water_surface.py script)
 
-#%%####### Bathymetry ##############
-# 6b1. Correction refraction C3_fwf
+#%% 6a. Correction refraction C3
+
+#%%6b1. Correction refraction C3_fwf
 # ATTENTION dans le script "Ardeche_FWF_refraction_correction_check.py", la fonction "refraction_correction.do_work" ne fonctionne
 # pour certaines lignes pour une raison inconnue. Ci-après est une solution de contournement pour que cela fonctionne à
 # à appliquer avant d'utiliser le script  "Ardeche_FWF_refraction_correction_check.py".
-# Cette solution a été appliquée aux lignes: Ardeche_01102021_L004_C3_r_w_1 ;
-workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Archives\Ardeche\Data"
+# Cette solution a été appliquée à toutes les lignes sauf: Ardeche_01102021_L001_C3_r_w ; Ardeche_01102021_L002_C3_r_w ;
+# Ardeche_01102021_L003_C3_r_w ; Ardeche_01102021_L004_C3_r_w_2 ; Ardeche_01102021_L008_C3_r_w_2
+# Ardeche_01102021_L009_C3_r_w_2 ; Ardeche_01102021_L011_C3_r_w_5 ; Ardeche_01102021_L012_C3_r_w ; Ardeche_01102021_L013_C3_r_w_5 ;
+# Ardeche_01102021_L014_C3_r_w_5 ; Ardeche_01102021_L015_C3_r_w ; Ardeche_01102021_L016_C3_r_w_6 ; Ardeche_01102021_L017_C3_r_w_6 ;
+# Ardeche_01102021_L018_C3_r_w_6 ; Ardeche_01102021_L019_C3_r_w_6;  Ardeche_01102021_L021_C3_r_w_5; Ardeche_01102021_L022_C3_r_w_5;
+# Ardeche_01102021_L023_C3_r_w_5
+workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results"
 epochs = ["Ardeche_01102021"] # epoch a and b
-Channels = [r'C3_fwf\correction_refraction\tmp']
+Channels = [r'C3_fwf_after_corr\correction_refraction\with_depth\to_split']
 epsg=2154
 for epoch in epochs:
     for channel in Channels:
@@ -200,21 +214,135 @@ for epoch in epochs:
 # use the "Ardeche_FWF_refraction_correction_check.py" script
 # Attention! les SF "EdgeofFlightline" et "SyntheticFlag" disparaissent après utilisation fonction refraction_correction.do_work
 
-#%%####### Bathymetry ##############
-# 6b2. Optional
-workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Archives\Ardeche\Data"
-epochs = ["Ardeche_01102021"] # epoch a and b
-Channels = [r'C3_fwf\correction_refraction\tmp']
-rename = 'Ardeche_01102021_L004_C3_r_w_1.laz' #file nmae after merged.
+#%% Merge splitted files "*_ref_corr.laz" (for FWF)
+workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results"
+epoch = "Ardeche_01102021" # epoch a and b
+Channel = r'C3_fwf_after_corr\correction_refraction\with_depth\to_split'
+path= os.path.join(workspace,epoch,Channel)
+path_ref_corr = os.path.join(path,'done') # path of "_ref_corr.laz" files
+Splitted_files_list = glob.glob(os.path.join(path,'*.laz'))
+
+for file in Splitted_files_list:
+    filename = os.path.basename(file).split(".")[0]
+    ref_corr_basename = f'{filename}_*_ref_corr'
+    ref_corr_files = glob.glob(os.path.join(path_ref_corr,f'{ref_corr_basename}.laz'))
+    print(ref_corr_files)
+    cc.merge(ref_corr_files,fmt='LAZ',silent=True,debug=True,global_shift=global_shifts.Ardeche_2,cc=cc_2023_01_06 )
+    #Clean
+    for file_ref in ref_corr_files:
+        os.remove(file_ref)
+    os.rename(os.path.join(path_ref_corr,f'{filename}_00_ref_corr_MERGED.laz'),os.path.join(path_ref_corr,f'{filename}_ref_corr.laz'))
+
+# move "_ref_corr.laz" files to the "with_depth" directory
+source_dir = path_ref_corr
+dest_dir= os.path.join(workspace,epoch,'C3_fwf_after_corr\correction_refraction\with_depth\done')
+source_files = glob.glob(os.path.join(source_dir,'*ref_corr.laz'))
+for file in source_files:
+    shutil.move(file, dest_dir)
+# Attention après le merge le champ scalaire "Edge of flight line" disparait (sur cloudcompare).
+
+
+#%% 4.4.1. Keep only points with depth refraction corrected from FWF data
+# a. drop noisy and water surface points
+workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results"
+epoch = "Ardeche_01102021" # epoch a and b
+Channel = r'C3_fwf_after_corr\correction_refraction'
 epsg=2154
+files = glob.glob(os.path.join(workspace,epoch,Channel, '*.laz'))
+# create bathy directory
+dir_bathy = os.path.join(workspace,epoch,Channel,'bathy')
+os.makedirs(dir_bathy,exist_ok=True)
+
+for file in files:
+    cmd = os.path.join(bin_lastools, 'las2las')
+    args = f' -i {file} -odir {dir_bathy} -olaz'
+    args += (f' -drop_class 7 ') # drop noise and water
+    args += f' -epsg {epsg} -meter -elevation_meter'
+    misc.run(cmd + args)
+
+
+#%% select bathy points
+workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results"
+epochs = ["Ardeche_01102021"] # epoch a and b
+Channels = [r'C3_fwf_after_corr\correction_refraction\bathy']
+epsg=2154
+minvalue, maxvalue = -20, 'MAX' # -20 to exclude possible remaining noisy points with large negative z value. For C3 maxvalue=0
+global_shift = global_shifts.Ardeche_2
+sf_name = 'depth'
+
+# Split .laz files
 for epoch in epochs:
     for channel in Channels:
         path = os.path.join(workspace,os.path.join(epoch,channel))
-        files = glob.glob(os.path.join(os.path.join(path,'with_depth'), '*_ref_corr.laz'))
-        # move _ref_corr.laz files to be merged
-        merge_dir = 'merge'
-        path_merge = os.path.join(os.path.join(path,'with_depth'),merge_dir)
-        os.makedirs(path_merge, exist_ok=True)
-        for file in files:
-            shutil.move(file, path_merge)
+        filenames = glob.glob(os.path.join(path, '*.laz'))
+        for filename in filenames:
+            cc.filter_ptcloud(filename,sf_name,minvalue,maxvalue,fmt='LAZ',global_shift=global_shift,silent=True, debug=True, cc=cc_2023_01_06)
 
+
+#%% Merge files
+for epoch in epochs:
+    for channel in Channels:
+        path = os.path.join(workspace,os.path.join(epoch,channel))
+        filenames = '*].laz'
+        files = glob.glob(os.path.join(path, filenames))
+        cc.merge(files, fmt='LAZ', silent=True, debug=True, global_shift=global_shifts.Ardeche_2,
+                 cc=cc_2023_01_06)
+        # Clean
+        for file in files:
+            os.remove(file)
+        os.rename(os.path.join(path, 'Ardeche_01102021_L001_C3_r_w_ref_corr_FILTERED_[-20_-0.07]_MERGED.laz'),
+                  os.path.join(path, 'Ardeche_01102021_C3_r_w_ref_corr_bathy.laz'))
+
+
+#%% filter bathy
+cloud =os.path.join(path,'Ardeche_01102021_C3_r_w_ref_corr_bathy.laz')
+filter_density = 200
+head, tail = os.path.split(cloud)
+head, tail, root, ext = misc.head_tail_root_ext(cloud)
+odir = os.path.join(head, 'filtered')
+os.makedirs(odir, exist_ok=True)
+out = os.path.join(odir, root + f'_filtered_{filter_density}.laz')
+
+cmd = cc_2023_01_06
+cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT LAS -EXT LAZ -AUTO_SAVE OFF'
+cmd += f' -O -GLOBAL_SHIFT AUTO {cloud}'
+cmd += ' -DENSITY 5. -TYPE KNN'
+cmd += f' -SET_ACTIVE_SF LAST -FILTER_SF {filter_density} MAX'
+cmd += f' -SAVE_CLOUDS FILE {out}'
+misc.run(cmd)
+
+#%%Apply Poisson reconstruction
+# split merged file
+workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results"
+epoch = "Ardeche_01102021" # epoch a and b
+Channel = r'C3_fwf_after_corr\correction_refraction\bathy\filtered\first_C2M'
+epsg=2154
+file = os.path.join(workspace,epoch,Channel,'first_C2M.laz' )#'Ardeche_01102021_C3_r_w_ref_corr_bathy_filtered_200.laz'
+
+cmd = os.path.join(bin_lastools, 'lassplit')
+args = f' -i {file} -split 10000 -digits 2 -olaz'
+args += f' -epsg {epsg} -meter -elevation_meter'
+misc.run(cmd + args)
+
+#%% Apply thin
+workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results"
+epoch = "Ardeche_01102021" # epoch a and b
+Channel = r'C3_fwf_after_corr\correction_refraction\bathy\filtered\first_C2M'
+files = glob.glob(os.path.join(workspace,epoch,Channel, '*M_*.laz'))#f'*_{filter_density}_*.laz'
+for file in files:
+    cmd = os.path.join(bin_lastools, 'lasthin')
+    args = f' -i {file} -odix _thin -olaz'
+    args += (f' -step 1 ')
+    args += (f' -percentile 10 ')
+    args += f' -epsg {epsg} -meter -elevation_meter'
+    misc.run(cmd + args)
+
+#%% merge and clean
+files = glob.glob(os.path.join(workspace,epoch,Channel, f'*_thin.laz'))
+cc.merge(files, fmt='LAZ', silent=True, debug=True, global_shift=global_shifts.Ardeche_2,cc=cc_2023_01_06)
+# Clean
+for file in files:
+    os.remove(file)
+merge_file = f'{os.path.basename(files[0]).split(".")[0]}_MERGED.laz'
+path=os.path.join(workspace,epoch,Channel)
+os.rename(os.path.join(path, merge_file),os.path.join(path, 'Ardeche_01102021_C3_r_w_ref_corr_bathy_filtered_200_thin.laz'))

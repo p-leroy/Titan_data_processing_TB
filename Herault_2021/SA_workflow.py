@@ -97,7 +97,7 @@ from scripts import classify_bathy as cb
 bin_lastools = 'C:/opt/LAStools/bin'
 
 #%% 2. Optional preprocessing (only if full-waveform data) : classify the noise in a sf with value=7
-FWF = False
+FWF = True
 path_fwf = 'G:\RENNES1\ThomasBernard\StripAlign\Herault\Data\Herault_30092021\C3_fwf'
 if FWF is True:
     filenames = glob.glob(os.path.join(path_fwf, '*.laz'))
@@ -119,7 +119,7 @@ if FWF is True:
 #%% 3. Preprocessing: classify point in rivers from a water_surface point cloud for all specified flight_lines
 workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\Data"
 epoch = ["Herault_30092021"] # epoch a and b
-Channels = ['C2','C3']
+Channels = ['C3_fwf']
 max_dist = 20 # Maximum distance to compute a C2C distance (allows to reduce the computation time)
 reference = "C2_ground_thin_1m_surface_final.laz" # the file name of the water_surface point cloud. This file has to be in the same folder than workspace.
 out_dir = workspace + r"\water\classified"
@@ -130,10 +130,10 @@ cb.classify_bathy(workspace, epoch, Channels, max_dist, reference, out_dir, glob
 #%% 4. Preprocessing: classify with the largest absolute scan angle as 7 (considered as noise)
 # Here I chose to find the maximum value of the scan angle first since it is different between flight lines.
 #cc.to_sbf
-
+# NOT USED
 workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\Data"
 epochs = ["Herault_30092021"] # epoch a and b
-Channels = ['C2',"C3"]
+Channels = [r'C3_fwf\test']
 global_shift = global_shifts.Herault
 for epoch in epochs:
     for channel in Channels:
@@ -145,7 +145,7 @@ for epoch in epochs:
             max_value = np.max(np.abs(scan_angle))
             mask = np.abs(scan_angle)>max_value-1
             laz['classification'][mask==True] = 7
-            las.WriteLAS(filename, laz)
+            las.WriteLAS(filename, laz,format_id=4)
 
 
 #%% 5. Run StripAlign for C2 C3
@@ -176,9 +176,72 @@ for name in epochs:
 
 
 #%% 7. Run StripAlign for C3_fwf
-#batch_file = 'run_SA_C3_C3fwf.bat'
-#subprocess.call(["start",Strip_path+batch_file],shell=True)
+Strip_path = 'G:/RENNES1/ThomasBernard/StripAlign/Herault/'
+batch_file = 'run_SA_C3_C3fwf.bat'
+subprocess.call(["start",Strip_path+batch_file],shell=True)
 
+#%% 4d. Clean and move results files for FWF
+path_res = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\results"
+corr_fwf_path = os.path.join(path_res,'corr_fwf')
+epochs = ["Herault_30092021"] # epoch a and b
+Channels = ['C3_fwf']
+for name in epochs:
+    for Channel in Channels:
+        laz_dir = os.path.join(path_res, os.path.join(name, f'{Channel}_after_corr'))
+        p2p_dir = os.path.join(laz_dir,'p2p')
+        os.makedirs(laz_dir, exist_ok=True)
+        os.makedirs(p2p_dir, exist_ok=True)
+
+        p2p_files = glob.glob(os.path.join(corr_fwf_path, f'*_p2p_corr.laz'))
+        for file in p2p_files:
+            shutil.move(file, p2p_dir)
+
+        res_files = glob.glob(os.path.join(corr_fwf_path, f'*.laz'))
+        for file in res_files:
+            shutil.move(file, laz_dir)
 
 #%% 4. Quality check (QC) after correction
 # Use the QC_recouvrement.py script and QC_inter_survey_C2C3.py
+
+#%%####### Bathymetry ##############
+#%% Build water surface from corrected data
+# 1. Preprocessing : Thin C2 and C2 with the lowest points
+#  Use the C2_thin_water_surface_preprocessing.py and C3_thin_water_surface_preprocessing.py script
+# 2. Construct water surface seed and propate the water surface
+# Use the Ardeche_01102021_water_surface.py script
+# 3. Automatic filtering of water surface with gradient z > 0.1 removed (with cloudcompare)
+# do 1., 2., 3. for Ardeche_18102021 (in 2. use the Ardeche_18102021_water_surface.py script)
+
+#%% 6a. Correction refraction C3
+#%% select bathy points
+workspace = r"G:\RENNES1\ThomasBernard\StripAlign\Herault\results"
+epochs = ["Herault_30092021"] # epoch a and b
+Channels = [r'C3_after_corr\correction_refraction\with_depth']
+epsg=2154
+minvalue, maxvalue = -20, 0 # -20 to exclude possible remaining noisy points with large negative z value. For C3 maxvalue=0
+global_shift = global_shifts.Herault
+sf_name = 'depth'
+
+# Split .laz files
+for epoch in epochs:
+    for channel in Channels:
+        path = os.path.join(workspace,os.path.join(epoch,channel))
+        filenames = glob.glob(os.path.join(path, '*_1.laz'))
+        for filename in filenames:
+            cc.filter_ptcloud(filename,sf_name,minvalue,maxvalue,fmt='LAZ',global_shift=global_shift,silent=True, debug=True, cc=cc_2023_01_06)
+
+
+#%% Merge files
+for epoch in epochs:
+    for channel in Channels:
+        path = os.path.join(workspace,os.path.join(epoch,channel))
+        filenames = '*].laz'
+        files = glob.glob(os.path.join(path, filenames))
+        cc.merge(files, fmt='LAZ', silent=True, debug=True, global_shift=global_shifts.Herault,
+                 cc=cc_2023_01_06)
+        # Clean
+        for file in files:
+            os.remove(file)
+        os.rename(os.path.join(path, 'Herault_30092021_L01_C3_r_1_FILTERED_[-20_0]_MERGED.laz'),
+                  os.path.join(path, 'Herault_30092021_C3_r_1_bathy.laz'))
+

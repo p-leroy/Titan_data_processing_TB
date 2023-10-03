@@ -11,13 +11,13 @@ from lidar_platform import cc, global_shifts
 from lidar_platform.qc import overlap_map, overlap as over, overlap_control
 
 #%% Same parameters for C2, C3 and C2C3
-results_dir = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results'
-mission = 'Ardeche_01102021'
-C2_dir = 'C2_after_corr'
-C3_dir = 'C3_after_corr'
+results_dir = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\Data'
+mission = 'Ardeche_18102021'
+C2_dir = 'C2'
+C3_dir = 'C3'
 C2C3_dir = 'C2C3_after_corr'
 cc_option_mission = 'Ardeche'
-water_surface = "Ardeche_01102021_C2_thin_1m_surface_final.laz"
+water_surface = "Ardeche_01102021_C2_corrected_thin_1m_surface_final.laz"
 
 #%% THIN LINES
 
@@ -42,7 +42,7 @@ settings = [cc_options, line_template, max_uncertainty]
 folder = C2_dir
 
 a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
-a.preprocessing(folder, pattern='*_thin.laz', use_water_surface=True)
+a.preprocessing(folder, pattern='*_thin.laz', use_water_surface=False)
 a.processing(global_shift)
 
 #%% THIN LINES C3
@@ -67,7 +67,7 @@ settings = [cc_options, line_template, max_uncertainty]
 folder = C3_dir
 
 a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
-a.preprocessing(folder, pattern='*_thin.laz', use_water_surface=True)
+a.preprocessing(folder, pattern='*_thin.laz', use_water_surface=False)
 a.processing(global_shift)
 
 #%% THIN LINES C2_C3

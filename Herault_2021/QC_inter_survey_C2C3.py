@@ -6,16 +6,16 @@ from joblib import delayed, Parallel
 
 from lidar_platform import cc, global_shifts, misc
 
-in_1 = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\results\Herault_30092021\C2_after_corr'  # Ardeche_01102021_L001_C2_r_1.laz
-in_2 = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\results\Herault_30092021\C3_after_corr'  # Ardeche_18102021_L01_C2_r_1.laz
+in_1 = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\results\Herault_30092021\C3_after_corr'  # Ardeche_01102021_L001_C2_r_1.laz
+in_2 = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\results\Herault_30092021\C3_fwf_after_corr'  # Ardeche_18102021_L01_C2_r_1.laz
 out = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\results\04-QC\Overlap\Herault_30092021\C2C3_after_corr'
-dir_tiles_1 = os.path.join(out, 'C2_after_corr')
+dir_tiles_1 = os.path.join(out, 'C3')
 dir_cores = os.path.join(dir_tiles_1, 'CORE_POINTS')
 m3c2_dir = os.path.join(dir_tiles_1, 'M3C2')
-dir_tiles_2 = os.path.join(out, 'C3_after_corr')
-params = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\results\04-QC\Overlap\Herault_30092021\C2C3_after_corr\m3c2_params.txt'
+dir_tiles_2 = os.path.join(out, 'C3_fwf')
+params = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\results\04-QC\Overlap\Herault_30092021\C3_C3_fwf_after_corr\m3c2_params.txt'
 global_shift = global_shifts.Herault
-FWF = False
+FWF = True
 
 cc_qlasio = r'G:\RENNES1\PaulLeroy\CloudCompare_20221202\CloudCompare.exe'
 

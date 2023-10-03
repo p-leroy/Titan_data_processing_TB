@@ -44,7 +44,9 @@ def custom_c2c(compared, reference, max_dist=None, split_XYZ=False, octree_level
         cmd.append('-SILENT')
     cmd.append('-NO_TIMESTAMP')
     cmd.append('-C_EXPORT_FMT')
-    cmd.append('LAZ')
+    cmd.append('LAS')
+    cmd.append('-EXT')
+    cmd.append('laz')
 
     open_file(cmd, compared, global_shift=global_shift)
     open_file(cmd, reference, global_shift=global_shift)
@@ -65,9 +67,9 @@ def custom_c2c(compared, reference, max_dist=None, split_XYZ=False, octree_level
         cmd.append('10')
         cmd.append('-REMOVE_SF')
         cmd.append('9')
-        cmd.append('-RENAME_SF')
-        cmd.append('LAST')
-        cmd.append('c2c_z')
+        #cmd.append('-RENAME_SF')
+        #cmd.append('LAST')
+        #cmd.append('c2c_z')
 
 
 

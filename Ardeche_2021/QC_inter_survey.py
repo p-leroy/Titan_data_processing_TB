@@ -6,14 +6,14 @@ from joblib import delayed, Parallel
 
 from lidar_platform import cc, global_shifts, misc
 
-in_1 = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results\Ardeche_01102021\C3_after_corr'  # C2_after_corr / C3_after_corr
+in_1 = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results\Ardeche_18102021\C2_after_corr'  # C2_after_corr / C3_after_corr
 in_2 = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results\Ardeche_18102021\C3_after_corr'  # C2_after_corr / C3_after_corr_fwf
-out = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results\04-QC\Overlap\Ardeche_inter_survey'
-dir_tiles_1 = os.path.join(out, 'C3_01102021') # C2_01102021
+out = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results\04-QC\Overlap\Ardeche_18102021\C2C3_after_corr'
+dir_tiles_1 = os.path.join(out, 'C2_18102021') # C2_01102021
 dir_cores = os.path.join(dir_tiles_1, 'CORE_POINTS')
 m3c2_dir = os.path.join(dir_tiles_1, 'M3C2')
 dir_tiles_2 = os.path.join(out, 'C3_18102021') # C2_18102021 / C3_01102021_fwf
-params = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results\04-QC\Overlap\Ardeche_inter_survey\m3c2_params.txt'
+params = r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\results\04-QC\Overlap\Ardeche_18102021\C2C3_after_corr\m3c2_params.txt'
 global_shift = global_shifts.Ardeche
 FWF = False
 
@@ -113,7 +113,7 @@ list_tiles = [tiles_1, tiles_2]
 count= 0
 for tiles in list_tiles:
     for tile in tiles:
-        cmd = os.path.join(bin_, 'las2las')
+        cmd = os.path.join(bin_lastools, 'las2las')
         args = f' -i {tile} -odix _filtered -olaz'
         args += (f' -drop_class 7 9') # drop noise and water
         if count > 0 and FWF == True:

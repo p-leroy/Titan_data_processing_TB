@@ -12,7 +12,7 @@ import glob
 
 from lidar_platform import cc, las
 from lidar_platform.config import global_shifts
-from lidar_platform.config.config import cc_custom, cc_std, cc_std_alt
+from lidar_platform.config.config import cc_custom, cc_std, cc_std_alt,cc_2023_01_06
 from scripts import custom_c2c as cc2c
 
 
@@ -35,20 +35,26 @@ def classify_bathy(workspace,epoch,Channels,max_dist,reference, out_dir, global_
                 file_path = lines[iii]
                 if Channel=='C3_fwf' and i==0:
                     output = cc2c.custom_c2c(file_path+'.laz',  workspace + '\\' + reference, max_dist=max_dist, split_XYZ=True,
-                                                 remove_C2C_SF=True, octree_level=11, global_shift=global_shift, silent= True)
+                                                 remove_C2C_SF=True, octree_level=11, global_shift=global_shift, silent= True,cc_exe=cc_2023_01_06)
                     if os.path.exists(output):
+                        print('This solution does not work currently so you have to class all points with (C2C absolute distances[<20] (Z) < 1) & (classification == 0) as 9 in Cloudcompare')
                         # Operations
-                        outlas = las.read(file_path + f'_C2C_DIST_MAX_DIST_{max_dist}_SF_RENAMED.laz', extra_fields=True)
-                        new_classification = outlas.classification
-                        new_classification[(outlas['c2c_z'] <= 1) & (outlas.classification == 0)] = 9
-                        outlas.classification = new_classification
-                        las.WriteLAS(file_path + f'_C2C_DIST.laz', outlas, format_id=4)
+                        # The following operations with las.py does not work, there is a problem when using the function read and WriteLAS --> Error: "laszip.LaszipError: reading point 0 of 0 total points"
+                        # --> when opening point cloud with las.read --> all array are filled of zeero and XYZ position is a single coordinate.
+                        # So I did these operations directly in cloudcompare.
+                        #outlas = las.read(file_path + f'_C2C_DIST_MAX_DIST_{max_dist}_SF_RENAMED.laz', extra_fields=True)
+                        #new_classification = outlas.classification
+                        #new_classification[(outlas['c2c_z'] <= 1) & (outlas.classification == 0)] = 9
+                        #outlas.classification = new_classification
+                        #c2c_z = outlas['c2c_z']
+                        #extra_field = [(("c2c_z","float32"),c2c_z)]
+                        #las.WriteLAS(file_path + f'_C2C_DIST.laz', outlas, format_id=4, extra_fields=extra_field)
 
                         # clean
-                        # os.remove(file_path+'.laz')
-                        # os.remove(file_path + f'_C2C_DIST_MAX_DIST_{max_dist}.laz')
-                        # os.remove(file_path + f'_C2C_DIST_MAX_DIST_{max_dist}_SF_RENAMED.laz')
-                        # os.rename(file_path + f'_C2C_DIST.laz', file_path+'.laz')
+                        #os.remove(file_path+'.laz')
+                        #os.remove(file_path + f'_C2C_DIST_MAX_DIST_{max_dist}.laz')
+                        #os.remove(file_path + f'_C2C_DIST_MAX_DIST_{max_dist}_SF_RENAMED.laz')
+                        #os.rename(file_path + f'_C2C_DIST.laz', file_path+'.laz')
                     else:
                         outlas = las.read(file_path + '.laz')
                         new_classification = outlas.classification

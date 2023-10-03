@@ -11,11 +11,11 @@ from lidar_platform import cc, global_shifts
 from lidar_platform.qc import overlap_map, overlap as over, overlap_control
 
 #%% Same parameters for C2, C3 and C2C3
-results_dir = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\results'
+results_dir = r'G:\RENNES1\ThomasBernard\StripAlign\Herault\Data'
 mission = 'Herault_30092021'
-C2_dir = 'C2_after_corr'
-C3_dir = 'C3_after_corr'
-C2C3_dir = 'C2C3_after_corr'
+C2_dir = 'C2'
+C3_dir = 'C3'
+C2C3_dir = 'C2C3'
 cc_option_mission = 'Herault'
 water_surface = "C2_ground_thin_1m_surface_final.laz"
 
