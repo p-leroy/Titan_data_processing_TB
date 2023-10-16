@@ -140,7 +140,7 @@ for epoch in epochs:
         path = os.path.join(workspace,os.path.join(epoch,channel))
         filenames = glob.glob(os.path.join(path, '*.laz'))
         for filename in filenames:
-            laz = las.read(filename)
+            laz = las.read_bfe(filename)
             scan_angle = laz['scan_angle_rank']
             max_value = np.max(np.abs(scan_angle))
             mask = np.abs(scan_angle)>max_value-1

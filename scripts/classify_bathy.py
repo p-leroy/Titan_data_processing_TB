@@ -39,10 +39,10 @@ def classify_bathy(workspace,epoch,Channels,max_dist,reference, out_dir, global_
                     if os.path.exists(output):
                         print('This solution does not work currently so you have to class all points with (C2C absolute distances[<20] (Z) < 1) & (classification == 0) as 9 in Cloudcompare')
                         # Operations
-                        # The following operations with las.py does not work, there is a problem when using the function read and WriteLAS --> Error: "laszip.LaszipError: reading point 0 of 0 total points"
-                        # --> when opening point cloud with las.read --> all array are filled of zeero and XYZ position is a single coordinate.
+                        # The following operations with las.py does not work, there is a problem when using the function read_bfe and WriteLAS --> Error: "laszip.LaszipError: reading point 0 of 0 total points"
+                        # --> when opening point cloud with las.read_bfe --> all array are filled of zeero and XYZ position is a single coordinate.
                         # So I did these operations directly in cloudcompare.
-                        #outlas = las.read(file_path + f'_C2C_DIST_MAX_DIST_{max_dist}_SF_RENAMED.laz', extra_fields=True)
+                        #outlas = las.read_bfe(file_path + f'_C2C_DIST_MAX_DIST_{max_dist}_SF_RENAMED.laz', extra_fields=True)
                         #new_classification = outlas.classification
                         #new_classification[(outlas['c2c_z'] <= 1) & (outlas.classification == 0)] = 9
                         #outlas.classification = new_classification
@@ -56,7 +56,7 @@ def classify_bathy(workspace,epoch,Channels,max_dist,reference, out_dir, global_
                         #os.remove(file_path + f'_C2C_DIST_MAX_DIST_{max_dist}_SF_RENAMED.laz')
                         #os.rename(file_path + f'_C2C_DIST.laz', file_path+'.laz')
                     else:
-                        outlas = las.read(file_path + '.laz')
+                        outlas = las.read_bfe(file_path + '.laz')
                         new_classification = outlas.classification
                         new_classification[outlas.classification >= 0] = 1
                         outlas.classification = new_classification
@@ -95,12 +95,12 @@ def classify_bathy(workspace,epoch,Channels,max_dist,reference, out_dir, global_
                         # Clean
                         file_name = os.path.basename(file_path)
                         #os.remove(os.path.join(path_temp, file_name + '.laz' ))
-                        outlas = las.read(os.path.join(path_temp, file_name + f'_C2C_DIST_MAX_DIST_{max_dist}.laz'))
+                        outlas = las.read_bfe(os.path.join(path_temp, file_name + f'_C2C_DIST_MAX_DIST_{max_dist}.laz'))
                         las.WriteLAS(os.path.join(path_temp, file_name + '.laz'), outlas)
                         os.remove(os.path.join(path_temp, file_name + f'_C2C_DIST_MAX_DIST_{max_dist}.laz'))
 
                     else:
-                        outlas = las.read(file_path+'.laz')
+                        outlas = las.read_bfe(file_path + '.laz')
                         new_classification = outlas.classification
                         new_classification[outlas.classification >= 0] = 1
                         outlas.classification = new_classification

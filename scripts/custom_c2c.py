@@ -95,6 +95,6 @@ def custom_c2c(compared, reference, max_dist=None, split_XYZ=False, octree_level
 #custom_c2c(compared, water_surface, global_shift=global_shift, debug=True, split_XYZ=True, cc_exe=cc_qlasio)
 
 # %%
-# #laz = laspy.read(
+# #laz = laspy.read_bfe(
 #     r'G:\RENNES1\ThomasBernard\StripAlign\Ardeche\Data\Ardeche_01102021\C3_fwf\TMP\Ardeche_01102021_L001_C3_r_w_C2C_DIST.laz')
 # laz['C2C absolute distances (Z)']

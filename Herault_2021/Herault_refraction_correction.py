@@ -23,7 +23,7 @@ for line in lines:
     out = bathy.add_depth_laz(line, water_surface, global_shift=global_shift, silent=True, cc_exe=cc_2023_01_06)
     #corrected = refraction_correction.do_work([out], sbet_params, n_jobs)
 
-#%% read sbet data
+#%% read_bfe sbet data
 # sbet_obj = sbet.sbet_config(sbet_params)
 
 #%% REFRACTION CORRECTION FOR ALL LINES
